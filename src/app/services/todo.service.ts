@@ -9,6 +9,16 @@ export class TodoService {
   private readonly STORAGE_KEY = 'todos';
   private readonly todosSignal = signal<Todo[]>([]);
 
+  private generateId(): string {
+    const cryptoObj = globalThis.crypto as Crypto | undefined;
+    if (cryptoObj && typeof cryptoObj.randomUUID === 'function') {
+      return cryptoObj.randomUUID();
+    }
+
+    // Fallback for environments without crypto.randomUUID (e.g. non-secure context)
+    return `todo_${Date.now()}_${Math.random().toString(16).slice(2)}`;
+  }
+
   readonly todos = this.todosSignal.asReadonly();
   readonly completedCount = computed(() => this.todosSignal().filter(t => t.completed).length);
   readonly pendingCount = computed(() => this.todosSignal().filter(t => !t.completed).length);
@@ -18,20 +28,30 @@ export class TodoService {
   }
 
   private loadTodos(): void {
-    const todos = this.storage.getItem<Todo[]>(this.STORAGE_KEY);
+    const todos = this.storage.getItem<any[]>(this.STORAGE_KEY);
     if (todos) {
-      this.todosSignal.set(todos);
+      const convertedTodos = todos.map(todo => ({
+        ...todo,
+        createdAt: new Date(todo.createdAt),
+        updatedAt: new Date(todo.updatedAt)
+      }));
+      this.todosSignal.set(convertedTodos);
     }
   }
 
   private saveTodos(): void {
-    this.storage.setItem(this.STORAGE_KEY, this.todosSignal());
+    const todos = this.todosSignal().map(todo => ({
+      ...todo,
+      createdAt: todo.createdAt.toISOString(),
+      updatedAt: todo.updatedAt.toISOString()
+    }));
+    this.storage.setItem(this.STORAGE_KEY, todos);
   }
 
   addTodo(title: string, description: string = ''): Todo {
     const now = new Date();
     const todo: Todo = {
-      id: crypto.randomUUID(),
+      id: this.generateId(),
       title,
       description,
       completed: false,

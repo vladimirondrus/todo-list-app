@@ -13,7 +13,7 @@
   </header>
 
   <section class="add-todo">
-    <form (ngSubmit)="addTodo()" class="add-form">
+    <div class="add-form">
       <input
         type="text"
         placeholder="What needs to be done?"
@@ -31,8 +31,8 @@
         name="description"
         class="input-description"
       />
-      <button type="submit" class="btn btn-add" [disabled]="!newTitle().trim()">Add</button>
-    </form>
+      <button type="button" class="btn btn-add" [disabled]="!newTitle().trim()" (click)="addTodo()">Add</button>
+    </div>
   </section>
 
   <section class="filters">
