@@ -1,0 +1,113 @@
+<div class="todo-container">
+  <header class="header">
+    <h1>📝 My TODO List</h1>
+    <div class="header-actions">
+      @if (authService.user()) {
+        <div class="user-info">
+          <img [src]="authService.user()!.imageUrl" alt="User avatar" class="avatar" referrerpolicy="no-referrer" />
+          <span>{{ authService.user()!.name }}</span>
+        </div>
+      }
+      <button class="btn btn-logout" (click)="logout()">Logout</button>
+    </div>
+  </header>
+
+  <section class="add-todo">
+    <form (ngSubmit)="addTodo()" class="add-form">
+      <input
+        type="text"
+        placeholder="What needs to be done?"
+        [ngModel]="newTitle()"
+        (ngModelChange)="updateNewTitle($event)"
+        name="title"
+        class="input-title"
+        required
+      />
+      <input
+        type="text"
+        placeholder="Description (optional)"
+        [ngModel]="newDescription()"
+        (ngModelChange)="updateNewDescription($event)"
+        name="description"
+        class="input-description"
+      />
+      <button type="submit" class="btn btn-add" [disabled]="!newTitle().trim()">Add</button>
+    </form>
+  </section>
+
+  <section class="filters">
+    <button
+      class="filter-btn"
+      [class.active]="filter() === 'all'"
+      (click)="setFilter('all')"
+    >
+      All ({{ todoService.todos().length }})
+    </button>
+    <button
+      class="filter-btn"
+      [class.active]="filter() === 'active'"
+      (click)="setFilter('active')"
+    >
+      Active ({{ todoService.pendingCount() }})
+    </button>
+    <button
+      class="filter-btn"
+      [class.active]="filter() === 'completed'"
+      (click)="setFilter('completed')"
+    >
+      Completed ({{ todoService.completedCount() }})
+    </button>
+  </section>
+
+  <section class="todo-list">
+    @for (todo of filteredTodos(); track todo.id) {
+      <div class="todo-item" [class.completed]="todo.completed">
+        @if (editingTodo()?.id === todo.id) {
+          <div class="edit-form">
+            <input
+              type="text"
+              [ngModel]="editTitle()"
+              (ngModelChange)="updateEditTitle($event)"
+              name="editTitle"
+              class="input-title"
+            />
+            <input
+              type="text"
+              [ngModel]="editDescription()"
+              (ngModelChange)="updateEditDescription($event)"
+              name="editDescription"
+              class="input-description"
+            />
+            <div class="edit-actions">
+              <button class="btn btn-save" (click)="saveEdit()">Save</button>
+              <button class="btn btn-cancel" (click)="cancelEdit()">Cancel</button>
+            </div>
+          </div>
+        } @else {
+          <div class="todo-content">
+            <input
+              type="checkbox"
+              [checked]="todo.completed"
+              (change)="toggleTodo(todo.id)"
+              class="todo-checkbox"
+            />
+            <div class="todo-text">
+              <span class="todo-title">{{ todo.title }}</span>
+              @if (todo.description) {
+                <span class="todo-description">{{ todo.description }}</span>
+              }
+            </div>
+          </div>
+          <div class="todo-actions">
+            <button class="btn btn-edit" (click)="startEdit(todo)">✏️</button>
+            <button class="btn btn-delete" (click)="deleteTodo(todo.id)">🗑️</button>
+          </div>
+        }
+      </div>
+    } @empty {
+      <div class="empty-state">
+        <p>No tasks yet. Add one above! 🚀</p>
+      </div>
+    }
+  </section>
+</div>
